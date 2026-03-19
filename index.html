@@ -697,7 +697,11 @@
   <!-- ===== TELA DO JOGO ===== -->
   <div id="game-screen">
     <div id="game-canvas-container"></div>
-
+<div id="joystick-container" style="display:none;position:fixed;bottom:100px;left:50%;transform:translateX(-50%);z-index:300;touch-action:none;">
+  <div id="joystick-base" style="width:120px;height:120px;border-radius:50%;background:rgba(124,109,250,0.2);border:2px solid rgba(124,109,250,0.5);position:relative;opacity:0.6;">
+    <div id="joystick-knob" style="width:50px;height:50px;border-radius:50%;background:rgba(124,109,250,0.8);border:2px solid #7c6dfa;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);"></div>
+  </div>
+</div>
     <!-- HUD sobre o canvas -->
     <div id="hud">
       <!-- Info do jogador -->
