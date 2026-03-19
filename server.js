@@ -34,7 +34,12 @@ io.on('connection', (socket) => {
     players[socket.id].moving = data.moving;
     if (newZone !== oldZone) {
       players[socket.id].zone = newZone;
-      const names = { reception: 'Recepcao', open_area: 'Area Aberta', meeting_room: 'Sala de Reuniao', private_room: 'Sala Privada' };
+      const names = {
+        reception: 'Recepcao',
+        open_area: 'Area Aberta',
+        meeting_room: 'Sala de Reuniao',
+        private_room: 'Sala Privada'
+      };
       socket.emit('player:zone_changed', { playerId: socket.id, zone: newZone, zoneName: names[newZone] });
       io.emit('player:zone_update', { playerId: socket.id, oldZone, newZone });
     }
@@ -50,5 +55,5 @@ io.on('connection', (socket) => {
   });
   socket.on('disconnect', () => { delete players[socket.id]; io.emit('player:left', { id: socket.id }); });
 });
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => { console.log('Servidor rodando na porta ' + PORT); });
