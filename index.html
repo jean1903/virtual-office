@@ -750,14 +750,14 @@
   <!-- Phaser.js 3 via CDN -->
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
   <!-- Lógica principal -->
-  function copyInviteLink() {
+  <script>function copyInviteLink() {
   const link = window.location.href;
   navigator.clipboard.writeText(link).then(() => {
     const toast = document.getElementById('invite-toast');
     toast.style.opacity = '1';
     setTimeout(() => { toast.style.opacity = '0'; }, 2000);
   });
-}
+}<script>
   <script src="main.js"></script>
 
 </body>
