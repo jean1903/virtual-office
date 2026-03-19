@@ -1,33 +1,4 @@
 const express = require('express');
-const http = require('http');
-const { Server } = require('socket.io');
-const path = require('path');
-
-const app = express();
-const server = http.createServer(app);
-
-const io = new Server(server, {
-  cors: { origin: '*', methods: ['GET', 'POST'] }
-});
-
-app.use(express.static(path.join(__dirname, 'client')));
-
-const players = {};
-
-const ZONES = {
-  reception: { x: 50, y: 50, width: 300, height: 200 },
-  open_area: { x: 50, y: 300, width: 500, height: 400 },
-  meeting_room: { x: 600, y: 50, width: 350, height: 300 },
-  private_room: { x: 600, y: 400, width: 350, height: 300 }
-};
-
-function detectZone(x, y) {
-  for (const [zoneId, zone] of Object.entries(ZONES)) {
-    if (x >= zone.x && x <= zone.x + zone.width && y >= zone.y && y <= zone.y + zone.height) {
-      return zoneId;
-    }
-  }
-  return 'open_area';
 }
 
 io.on('connection', (socket) => {
