@@ -11,9 +11,9 @@ const AVATAR_PALETTES = {
 };
 
 const ZONES = {
-  reception:    { x:50,  y:50,  w:300, h:200, name:'Recepção' },
-  open_area:    { x:50,  y:300, w:500, h:400, name:'Área Aberta' },
-  meeting_room: { x:600, y:50,  w:350, h:300, name:'Sala de Reunião' },
+  reception:    { x:50,  y:50,  w:300, h:200, name:'Recepcao' },
+  open_area:    { x:50,  y:300, w:500, h:400, name:'Area Aberta' },
+  meeting_room: { x:600, y:50,  w:350, h:300, name:'Sala de Reuniao' },
   private_room: { x:600, y:400, w:350, h:300, name:'Sala Privada' }
 };
 
@@ -71,14 +71,14 @@ function initSocket() {
   GameState.socket = io();
   GameState.socket.on('connect', () => {
     GameState.localPlayerId = GameState.socket.id;
-    document.getElementById('connection-status').textContent = 'Servidor online — pronto para entrar!';
+    document.getElementById('connection-status').textContent = 'Servidor online - pronto para entrar!';
     document.getElementById('btn-enter').disabled = false;
   });
   GameState.socket.on('disconnect', () => {
     document.getElementById('connection-status').textContent = 'Desconectado do servidor';
   });
   GameState.socket.on('connect_error', () => {
-    document.getElementById('connection-status').textContent = '⚠️ Erro ao conectar — verifique o servidor';
+    document.getElementById('connection-status').textContent = 'Erro ao conectar - verifique o servidor';
   });
 }
 
@@ -143,46 +143,213 @@ function createScene() {
 
 function drawOfficeMap(scene) {
   const g = scene.add.graphics();
+
+  // Fundo geral
   g.fillStyle(0x16213e); g.fillRect(0,0,MAP_WIDTH,MAP_HEIGHT);
+
+  // Grid sutil
   g.lineStyle(1,0x0f3460,0.3);
   for(let x=0;x<MAP_WIDTH;x+=32) g.lineBetween(x,0,x,MAP_HEIGHT);
   for(let y=0;y<MAP_HEIGHT;y+=32) g.lineBetween(0,y,MAP_WIDTH,y);
 
+  // RECEPCAO
   g.fillStyle(0x0f3460,0.8); g.fillRect(50,50,300,200);
   g.lineStyle(2,0x4ecdc4,0.6); g.strokeRect(50,50,300,200);
-  g.fillStyle(0x2d6a4f); g.fillRect(100,80,180,40);
-  g.fillStyle(0x52b788); g.fillRect(102,82,176,12);
-  g.fillStyle(0x7c6dfa);
-  [[80,160],[120,160],[200,160]].forEach(([x,y])=>g.fillRect(x,y,24,24));
 
-  g.fillStyle(0x0d2137,0.8); g.fillRect(50,300,500,400);
-  g.lineStyle(2,0x95e1d3,0.4); g.strokeRect(50,300,500,400);
-  [[80,340],[200,340],[320,340],[420,340],[80,460],[200,460],[320,460],[420,460],[80,580],[200,580],[320,580],[420,580]].forEach(([dx,dy])=>{
-    g.fillStyle(0x2d3561); g.fillRect(dx,dy,80,50);
-    g.fillStyle(0x0d0d14); g.fillRect(dx+15,dy+5,50,30);
-    g.fillStyle(0x7c6dfa); g.fillRect(dx+17,dy+7,46,24);
-    g.fillStyle(0x4a4a7a); g.fillRect(dx+28,dy+52,24,20);
+  // Balcao de recepcao - mais detalhado
+  g.fillStyle(0x1b4332); g.fillRect(90,85,200,50);
+  g.fillStyle(0x2d6a4f); g.fillRect(92,87,196,46);
+  g.fillStyle(0x52b788); g.fillRect(92,87,196,14);
+  g.fillStyle(0x40916c); g.fillRect(92,101,196,6);
+  // Monitor na recepcao
+  g.fillStyle(0x0d0d14); g.fillRect(165,70,50,30);
+  g.fillStyle(0x7c6dfa); g.fillRect(167,72,46,24);
+  g.fillStyle(0x2d2d2d); g.fillRect(185,100,12,8);
+  g.fillStyle(0x3d3d3d); g.fillRect(178,108,26,4);
+
+  // Cadeiras recepcao - mais detalhadas
+  const chairColor = 0x5a4fcf;
+  const chairDark = 0x3d35a0;
+  [[80,155],[118,155],[165,155],[210,155],[255,155]].forEach(([x,y]) => {
+    g.fillStyle(chairDark); g.fillRect(x,y,28,6);
+    g.fillStyle(chairColor); g.fillRect(x,y+6,28,22);
+    g.fillStyle(chairDark); g.fillRect(x+2,y+28,6,8);
+    g.fillStyle(chairDark); g.fillRect(x+20,y+28,6,8);
+    g.fillStyle(0x6a5fd6); g.fillRect(x+2,y+8,24,16);
   });
 
+  // Plantas
+  drawPlant(g, 60,58); drawPlant(g, 318,58);
+  drawPlant(g, 60,195); drawPlant(g, 318,195);
+
+  // AREA ABERTA
+  g.fillStyle(0x0d2137,0.8); g.fillRect(50,300,500,400);
+  g.lineStyle(2,0x95e1d3,0.4); g.strokeRect(50,300,500,400);
+
+  // Mesas de trabalho melhoradas
+  const deskPositions = [
+    [75,345],[195,345],[315,345],[415,345],
+    [75,455],[195,455],[315,455],[415,455],
+    [75,565],[195,565],[315,565],[415,565],
+  ];
+  deskPositions.forEach(([dx,dy]) => drawImprovedDesk(g, dx, dy));
+
+  // SALA DE REUNIAO
   g.fillStyle(0x1a0a2e,0.9); g.fillRect(600,50,350,300);
   g.lineStyle(2,0xf38181,0.7); g.strokeRect(600,50,350,300);
-  g.fillStyle(0x4a1942); g.fillRect(650,100,240,120);
-  g.fillStyle(0xfafafa,0.9); g.fillRect(670,240,200,90);
 
+  // Mesa de reuniao melhorada - oval/redonda
+  g.fillStyle(0x2d1b3d); g.fillRect(635,105,270,130);
+  g.fillStyle(0x3d2b4d); g.fillRect(637,107,266,126);
+  g.fillStyle(0x4a1942); g.fillRect(640,110,260,120);
+  // Reflexo na mesa
+  g.fillStyle(0x5a2952,0.5); g.fillRect(642,112,120,10);
+
+  // Cadeiras ao redor da mesa de reuniao
+  const meetChairColor = 0xc0392b;
+  const meetChairDark = 0x922b21;
+  // Cadeiras em cima
+  for(let cx=655;cx<=860;cx+=45) {
+    g.fillStyle(meetChairDark); g.fillRect(cx,93,30,6);
+    g.fillStyle(meetChairColor); g.fillRect(cx,99,30,20);
+    g.fillStyle(meetChairDark); g.fillRect(cx+3,86,6,8);
+    g.fillStyle(meetChairDark); g.fillRect(cx+21,86,6,8);
+  }
+  // Cadeiras embaixo
+  for(let cx=655;cx<=860;cx+=45) {
+    g.fillStyle(meetChairDark); g.fillRect(cx,232,30,6);
+    g.fillStyle(meetChairColor); g.fillRect(cx,238,30,20);
+    g.fillStyle(meetChairDark); g.fillRect(cx+3,258,6,8);
+    g.fillStyle(meetChairDark); g.fillRect(cx+21,258,6,8);
+  }
+  // Cadeiras nos lados
+  g.fillStyle(meetChairDark); g.fillRect(620,125,6,30); g.fillStyle(meetChairColor); g.fillRect(626,125,20,30);
+  g.fillStyle(meetChairDark); g.fillRect(620,175,6,30); g.fillStyle(meetChairColor); g.fillRect(626,175,20,30);
+  g.fillStyle(meetChairDark); g.fillRect(904,125,6,30); g.fillStyle(meetChairColor); g.fillRect(884,125,20,30);
+  g.fillStyle(meetChairDark); g.fillRect(904,175,6,30); g.fillStyle(meetChairColor); g.fillRect(884,175,20,30);
+
+  // Tela de projecao melhorada
+  g.fillStyle(0x1a1a2e); g.fillRect(655,248,230,85);
+  g.fillStyle(0xfafafa,0.95); g.fillRect(658,250,224,80);
+  g.fillStyle(0xe8e8e8); g.fillRect(658,250,224,20);
+  g.fillStyle(0xf38181,0.3); g.fillRect(660,252,80,16);
+  g.fillStyle(0x7c6dfa,0.3); g.fillRect(745,252,60,16);
+
+  // Plantas sala reuniao
+  drawPlant(g, 608,58); drawPlant(g, 908,58);
+  drawPlant(g, 608,290); drawPlant(g, 908,290);
+
+  // SALA PRIVADA
   g.fillStyle(0x1a0a1a,0.9); g.fillRect(600,400,350,300);
   g.lineStyle(2,0xa29bfe,0.7); g.strokeRect(600,400,350,300);
-  g.fillStyle(0x2d1b69); g.fillRect(650,450,120,80);
-  g.fillStyle(0x4a237a); g.fillRect(800,440,130,60);
 
-  g.lineStyle(3,0x2a2a42,1);
+  // Mesa privada melhorada
+  g.fillStyle(0x1a0a2e); g.fillRect(635,450,130,90);
+  g.fillStyle(0x2d1b69); g.fillRect(637,452,126,86);
+  g.fillStyle(0x3d2b79); g.fillRect(639,454,122,82);
+  // Monitor privado
+  g.fillStyle(0x0d0d14); g.fillRect(670,440,60,35);
+  g.fillStyle(0xa29bfe); g.fillRect(672,442,56,30);
+  g.fillStyle(0x2d2d2d); g.fillRect(695,475,14,8);
+  g.fillStyle(0x3d3d3d); g.fillRect(688,483,28,4);
+  // Cadeira privada
+  g.fillStyle(0x4a237a); g.fillRect(680,542,40,6);
+  g.fillStyle(0x6b35a3); g.fillRect(680,548,40,25);
+  g.fillStyle(0x4a237a); g.fillRect(683,573,8,10);
+  g.fillStyle(0x4a237a); g.fillRect(709,573,8,10);
+
+  // Sofa melhorado
+  g.fillStyle(0x2d1b4e); g.fillRect(790,445,145,70);
+  g.fillStyle(0x4a237a); g.fillRect(792,447,141,66);
+  g.fillStyle(0x5d2d8a); g.fillRect(792,447,141,18);
+  g.fillStyle(0x792d9a); g.fillRect(794,449,137,14);
+  g.fillStyle(0x4a237a); g.fillRect(792,447,18,66);
+  g.fillStyle(0x5d2d8a); g.fillRect(792,449,14,62);
+  // Almofadas
+  g.fillStyle(0x9b59b6); g.fillRect(815,460,30,40);
+  g.fillStyle(0x8e44ad); g.fillRect(817,462,26,36);
+  g.fillStyle(0x9b59b6); g.fillRect(855,460,30,40);
+  g.fillStyle(0x8e44ad); g.fillRect(857,462,26,36);
+  // Mesa de centro
+  g.fillStyle(0x2d1b3d); g.fillRect(810,520,80,30);
+  g.fillStyle(0x3d2b4d); g.fillRect(812,522,76,26);
+
+  // Plantas sala privada
+  drawPlant(g, 608,408); drawPlant(g, 908,408);
+  drawPlant(g, 608,658); drawPlant(g, 908,658);
+
+  // Separadores
+  g.lineStyle(4,0x1a1a2e,1);
   g.lineBetween(50,260,580,260);
   g.lineBetween(570,50,570,720);
 
-  const labelStyle = { fontFamily:'"Space Mono",monospace', fontSize:'11px', color:'#888899' };
-  scene.add.text(200,62,'// RECEPÇÃO',labelStyle).setOrigin(0.5,0);
-  scene.add.text(300,312,'// ÁREA ABERTA',labelStyle).setOrigin(0.5,0);
-  scene.add.text(775,62,'// SALA DE REUNIÃO',{...labelStyle,color:'#f38181'}).setOrigin(0.5,0);
-  scene.add.text(775,412,'// SALA PRIVADA',{...labelStyle,color:'#a29bfe'}).setOrigin(0.5,0);
+  // Portas
+  g.lineStyle(3,0x4ecdc4,0.9);
+  g.lineBetween(190,258,270,258);
+  g.lineStyle(3,0xf38181,0.9);
+  g.lineBetween(700,352,780,352);
+  g.lineStyle(3,0xa29bfe,0.9);
+  g.lineBetween(700,398,780,398);
+
+  // Labels
+  const lbl = { fontFamily:'monospace', fontSize:'11px', color:'#888899' };
+  scene.add.text(200,62,'// RECEPCAO',lbl).setOrigin(0.5,0);
+  scene.add.text(300,312,'// AREA ABERTA',lbl).setOrigin(0.5,0);
+  scene.add.text(775,62,'// SALA DE REUNIAO',{...lbl,color:'#f38181'}).setOrigin(0.5,0);
+  scene.add.text(775,412,'// SALA PRIVADA',{...lbl,color:'#a29bfe'}).setOrigin(0.5,0);
+}
+
+function drawPlant(g, x, y) {
+  // Vaso
+  g.fillStyle(0x8B4513); g.fillRect(x+3,y+10,10,8);
+  g.fillStyle(0xa0522d); g.fillRect(x+2,y+8,12,4);
+  // Terra
+  g.fillStyle(0x3d2b1f); g.fillRect(x+3,y+10,10,3);
+  // Folhas
+  g.fillStyle(0x1b4332); g.fillRect(x,y,6,12);
+  g.fillStyle(0x2d6a4f); g.fillRect(x+2,y-4,5,10);
+  g.fillStyle(0x52b788); g.fillRect(x+4,y-8,5,12);
+  g.fillStyle(0x40916c); g.fillRect(x+8,y-2,6,10);
+  g.fillStyle(0x2d6a4f); g.fillRect(x+10,y+2,5,8);
+}
+
+function drawImprovedDesk(g, x, y) {
+  // Sombra da mesa
+  g.fillStyle(0x000000,0.2); g.fillRect(x+3,y+3,86,54);
+  // Tampo da mesa
+  g.fillStyle(0x1a2744); g.fillRect(x,y,86,50);
+  g.fillStyle(0x2d3561); g.fillRect(x,y,84,48);
+  g.fillStyle(0x3d4571); g.fillRect(x,y,84,6);
+  // Monitor
+  g.fillStyle(0x0a0a12); g.fillRect(x+18,y-28,48,28);
+  g.fillStyle(0x111122); g.fillRect(x+20,y-26,44,24);
+  g.fillStyle(0x1a1a3e); g.fillRect(x+22,y-24,40,20);
+  // Tela do monitor com conteudo
+  g.fillStyle(0x7c6dfa,0.8); g.fillRect(x+22,y-24,40,8);
+  g.fillStyle(0x4ecdc4,0.5); g.fillRect(x+22,y-15,25,3);
+  g.fillStyle(0x4ecdc4,0.3); g.fillRect(x+22,y-11,35,3);
+  g.fillStyle(0x4ecdc4,0.3); g.fillRect(x+22,y-7,20,3);
+  // Pe do monitor
+  g.fillStyle(0x1a1a2e); g.fillRect(x+38,y,8,5);
+  g.fillStyle(0x2a2a3e); g.fillRect(x+32,y+5,20,3);
+  // Teclado
+  g.fillStyle(0x252540); g.fillRect(x+10,y+28,55,14);
+  g.fillStyle(0x2d2d50); g.fillRect(x+11,y+29,53,12);
+  for(let kx=0;kx<5;kx++) for(let ky=0;ky<2;ky++) {
+    g.fillStyle(0x3d3d60); g.fillRect(x+13+kx*10,y+31+ky*5,8,4);
+  }
+  // Mouse
+  g.fillStyle(0x252540); g.fillRect(x+68,y+30,12,16);
+  g.fillStyle(0x3d3d60); g.fillRect(x+69,y+31,10,7);
+  g.fillStyle(0x4a4a70); g.fillRect(x+74,y+31,1,7);
+  // Cadeira melhorada
+  g.fillStyle(0x1a1a2e); g.fillRect(x+20,y+55,44,6);
+  g.fillStyle(0x2d2d4e); g.fillRect(x+20,y+61,44,24);
+  g.fillStyle(0x3d3d5e); g.fillRect(x+22,y+63,40,20);
+  // Rodinhas
+  g.fillStyle(0x1a1a2e); g.fillRect(x+20,y+85,8,5);
+  g.fillStyle(0x1a1a2e); g.fillRect(x+56,y+85,8,5);
+  g.fillStyle(0x1a1a2e); g.fillRect(x+38,y+85,8,5);
 }
 
 function createPlayerSprite(scene, x, y, palette, isLocal) {
@@ -208,7 +375,7 @@ function createPlayerSprite(scene, x, y, palette, isLocal) {
   const sprite = scene.add.image(0,0,texKey);
   sprite.setScale(1.5);
   const nameLabel = scene.add.text(0,-28,isLocal ? GameState.playerName : '',{
-    fontFamily:'"Space Mono",monospace', fontSize:'9px', color: isLocal ? '#7c6dfa' : '#e8e8f0',
+    fontFamily:'monospace', fontSize:'9px', color: isLocal ? '#7c6dfa' : '#e8e8f0',
     stroke:'#0d0d14', strokeThickness:3
   }).setOrigin(0.5,1);
   container.add([shadow, sprite, nameLabel]);
@@ -251,7 +418,7 @@ function setupSocketEvents(scene) {
   socket.on('player:joined', (player) => {
     if (player.id===socket.id) return;
     addOtherPlayer(scene, player.id, player);
-    addChatMessage('sistema', player.name+' entrou no escritório');
+    addChatMessage('sistema', player.name+' entrou no escritorio');
     updateOnlineCount();
   });
   socket.on('player:moved', (data) => {
@@ -338,11 +505,11 @@ async function initAudio() {
   try {
     GameState.localStream=await navigator.mediaDevices.getUserMedia({audio:true,video:false});
     document.getElementById('audio-icon').textContent='🎤';
-    document.getElementById('audio-zone-label').textContent='Recepção';
+    document.getElementById('audio-zone-label').textContent='Recepcao';
     document.getElementById('mute-btn').onclick=toggleMute;
   } catch(err) {
     document.getElementById('audio-icon').textContent='🚫';
-    document.getElementById('audio-zone-label').textContent='Sem áudio';
+    document.getElementById('audio-zone-label').textContent='Sem audio';
   }
 }
 
@@ -416,4 +583,4 @@ document.addEventListener('DOMContentLoaded',()=>{
   initSocket();
   document.getElementById('player-name').addEventListener('keydown',(e)=>{ if(e.key==='Enter') enterOffice(); });
   document.getElementById('btn-enter').disabled=true;
-}); 
+});
