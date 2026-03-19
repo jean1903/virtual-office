@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Virtual Office</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    /* =====================================================
+       VARIÁVEIS E RESET
+    ===================================================== */
+    :root {
+      --bg: #0d0d14;
+      --surface: #14141f;
+      --surface2: #1c1c2e;
+      --border: #2a2a42;
+      --accent: #7c6dfa;
+      --accent2: #fa6d9e;
+      --accent3: #6dfac0;
+      --text: #e8e8f0;
+      --text-dim: #888899;
+      --pixel: 2px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Space Mono', monospace;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Grid de fundo animado */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(124, 109, 250, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(124, 109, 250, 0.05) 1px, transparent 1px);
+      background-size: 40px 40px;
+      animation: gridMove 20s linear infinite;
+      z-index: 0;
+    }
+
+    @keyframes gridMove {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(40px, 40px); }
+    }
+
+    /* Partículas flutuantes */
+    .particles {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .particle {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background: var(--accent);
+      border-radius: 0; /* pixel style */
+      animation: float linear infinite;
+      opacity: 0;
+    }
+
+    @keyframes float {
+      0% { transform: translateY(100vh) translateX(0); opacity: 0; }
+      10% { opacity: 0.6; }
+      90% { opacity: 0.6; }
+      100% { transform: translateY(-100px) translateX(30px); opacity: 0; }
+    }
+
+    /* =====================================================
+       CONTAINER PRINCIPAL
+    ===================================================== */
+    .login-container {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+      animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(40px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* =====================================================
+       HEADER / LOGO
+    ===================================================== */
+    .logo-area {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .logo-icon {
+      font-size: 48px;
+      display: block;
+      margin-bottom: 12px;
+      filter: drop-shadow(0 0 20px rgba(124, 109, 250, 0.8));
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { filter: drop-shadow(0 0 20px rgba(124, 109, 250, 0.8)); }
+      50% { filter: drop-shadow(0 0 40px rgba(250, 109, 158, 0.9)); }
+    }
+
+    .logo-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 42px;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 50%, var(--accent3) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+    }
+
+    .logo-subtitle {
+      color: var(--text-dim);
+      font-size: 11px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      margin-top: 8px;
+    }
+
+    /* =====================================================
+       CARD DE LOGIN
+    ===================================================== */
+    .login-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0; /* pixel/sharp corners */
+      padding: 40px;
+      width: 440px;
+      position: relative;
+      box-shadow:
+        0 0 0 1px rgba(124, 109, 250, 0.1),
+        0 20px 60px rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    }
+
+    /* Borda colorida no topo */
+    .login-card::before {
+      content: '';
+      position: absolute;
+      top: -1px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent3));
+    }
+
+    /* Tag de canto estilo pixel */
+    .login-card::after {
+      content: 'v1.0';
+      position: absolute;
+      top: 12px;
+      right: 16px;
+      font-size: 10px;
+      color: var(--text-dim);
+      letter-spacing: 2px;
+    }
+
+    /* =====================================================
+       CAMPOS DO FORMULÁRIO
+    ===================================================== */
+    .field-group {
+      margin-bottom: 24px;
+    }
+
+    .field-label {
+      display: block;
+      font-size: 11px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 10px;
+    }
+
+    .field-label span {
+      color: var(--accent);
+    }
+
+    .field-input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'Space Mono', monospace;
+      font-size: 16px;
+      padding: 14px 16px;
+      outline: none;
+      border-radius: 0;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .field-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(124, 109, 250, 0.15);
+    }
+
+    .field-input::placeholder {
+      color: var(--text-dim);
+      opacity: 0.5;
+    }
+
+    /* =====================================================
+       SELEÇÃO DE AVATAR
+    ===================================================== */
+    .avatar-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .avatar-option {
+      cursor: pointer;
+      position: relative;
+    }
+
+    .avatar-option input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .avatar-card {
+      background: var(--surface2);
+      border: 2px solid var(--border);
+      padding: 16px 12px;
+      text-align: center;
+      transition: all 0.15s;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .avatar-card:hover {
+      border-color: rgba(124, 109, 250, 0.4);
+      background: rgba(124, 109, 250, 0.05);
+    }
+
+    .avatar-option input:checked + .avatar-card {
+      border-color: var(--accent);
+      background: rgba(124, 109, 250, 0.12);
+      box-shadow: 0 0 20px rgba(124, 109, 250, 0.2);
+    }
+
+    /* Canvas do avatar (pixel art gerado via JS) */
+    .avatar-canvas {
+      display: block;
+      margin: 0 auto 8px;
+      image-rendering: pixelated;
+    }
+
+    .avatar-name-tag {
+      font-size: 10px;
+      letter-spacing: 1px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+    }
+
+    .avatar-option input:checked + .avatar-card .avatar-name-tag {
+      color: var(--accent);
+    }
+
+    /* =====================================================
+       BOTÃO ENTRAR
+    ===================================================== */
+    .btn-enter {
+      width: 100%;
+      background: var(--accent);
+      color: #fff;
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 15px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      padding: 18px;
+      border: none;
+      border-radius: 0;
+      cursor: pointer;
+      margin-top: 8px;
+      position: relative;
+      overflow: hidden;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .btn-enter::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%);
+    }
+
+    .btn-enter:hover {
+      background: #9b8dfc;
+    }
+
+    .btn-enter:active {
+      transform: scale(0.99);
+    }
+
+    .btn-enter:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Shimmer no botão */
+    .btn-enter::before {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+      animation: shimmer 3s infinite;
+    }
+
+    @keyframes shimmer {
+      0% { left: -100%; }
+      100% { left: 200%; }
+    }
+
+    /* =====================================================
+       STATUS / MENSAGENS
+    ===================================================== */
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 20px;
+      padding: 12px 16px;
+      background: rgba(109, 250, 192, 0.05);
+      border: 1px solid rgba(109, 250, 192, 0.15);
+      font-size: 11px;
+      color: var(--accent3);
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--accent3);
+      border-radius: 50%;
+      animation: blink 1.5s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* =====================================================
+       TELA DO JOGO (inicialmente oculta)
+    ===================================================== */
+    #game-screen {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #0d0d14;
+      z-index: 100;
+    }
+
+    #game-canvas-container {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* HUD Overlay */
+    #hud {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+      z-index: 200;
+    }
+
+    /* Nome do jogador e zona atual */
+    #player-info {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      background: rgba(13, 13, 20, 0.85);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      padding: 10px 16px;
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      pointer-events: none;
+      backdrop-filter: blur(10px);
+    }
+
+    #player-info .player-name {
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    #player-info .zone-name {
+      color: var(--text-dim);
+      font-size: 10px;
+      margin-top: 3px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    /* Contagem de jogadores online */
+    #online-count {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: rgba(13, 13, 20, 0.85);
+      border: 1px solid var(--border);
+      padding: 10px 16px;
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      color: var(--text-dim);
+      backdrop-filter: blur(10px);
+      pointer-events: none;
+    }
+
+    #online-count span {
+      color: var(--accent3);
+      font-weight: 700;
+    }
+
+    /* Notificação de zona */
+    #zone-notification {
+      position: absolute;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(13, 13, 20, 0.9);
+      border: 1px solid var(--accent);
+      padding: 12px 24px;
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      color: var(--accent);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      white-space: nowrap;
+      backdrop-filter: blur(10px);
+    }
+
+    #zone-notification.visible {
+      opacity: 1;
+    }
+
+    /* Status de áudio */
+    #audio-status {
+      position: absolute;
+      bottom: 16px;
+      right: 16px;
+      background: rgba(13, 13, 20, 0.85);
+      border: 1px solid var(--border);
+      padding: 10px 16px;
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      pointer-events: all;
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    #audio-status .audio-icon {
+      font-size: 16px;
+    }
+
+    #audio-status .audio-label {
+      color: var(--text-dim);
+      font-size: 10px;
+      letter-spacing: 1px;
+    }
+
+    #audio-status .audio-zone {
+      color: var(--accent3);
+      font-size: 10px;
+    }
+
+    #mute-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      padding: 4px 10px;
+      cursor: pointer;
+      transition: border-color 0.2s;
+      pointer-events: all;
+      letter-spacing: 1px;
+    }
+
+    #mute-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* Chat */
+    #chat-container {
+      position: absolute;
+      bottom: 16px;
+      left: 16px;
+      width: 320px;
+      pointer-events: all;
+    }
+
+    #chat-messages {
+      background: rgba(13, 13, 20, 0.8);
+      border: 1px solid var(--border);
+      border-bottom: none;
+      height: 150px;
+      overflow-y: auto;
+      padding: 8px;
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      backdrop-filter: blur(10px);
+    }
+
+    #chat-messages::-webkit-scrollbar { width: 3px; }
+    #chat-messages::-webkit-scrollbar-track { background: transparent; }
+    #chat-messages::-webkit-scrollbar-thumb { background: var(--border); }
+
+    .chat-msg {
+      margin-bottom: 6px;
+      line-height: 1.4;
+    }
+
+    .chat-msg .msg-author {
+      color: var(--accent);
+      font-size: 10px;
+    }
+
+    .chat-msg .msg-text {
+      color: var(--text);
+    }
+
+    .chat-msg.system {
+      color: var(--text-dim);
+      font-style: italic;
+      font-size: 10px;
+    }
+
+    #chat-input-row {
+      display: flex;
+    }
+
+    #chat-input {
+      flex: 1;
+      background: rgba(13, 13, 20, 0.9);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      padding: 8px 10px;
+      outline: none;
+      backdrop-filter: blur(10px);
+    }
+
+    #chat-input:focus { border-color: var(--accent); }
+
+    #chat-send {
+      background: var(--accent);
+      border: none;
+      color: #fff;
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+
+    /* Controles - legenda */
+    #controls-hint {
+      position: absolute;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 16px;
+      pointer-events: none;
+    }
+
+    .key-hint {
+      background: rgba(13, 13, 20, 0.8);
+      border: 1px solid var(--border);
+      padding: 4px 8px;
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      color: var(--text-dim);
+      letter-spacing: 1px;
+    }
+
+    .key-hint kbd {
+      color: var(--accent);
+      font-size: 9px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== PARTÍCULAS DE FUNDO ===== -->
+  <div class="particles" id="particles"></div>
+
+  <!-- ===== TELA DE LOGIN ===== -->
+  <div class="login-container" id="login-screen">
+    <div class="logo-area">
+      <span class="logo-icon">🏢</span>
+      <div class="logo-title">VIRTUAL OFFICE</div>
+      <div class="logo-subtitle">Seu espaço de trabalho online</div>
+    </div>
+
+    <div class="login-card">
+      <!-- Campo de Nome -->
+      <div class="field-group">
+        <label class="field-label" for="player-name">
+          <span>//</span> Seu nome
+        </label>
+        <input
+          type="text"
+          id="player-name"
+          class="field-input"
+          placeholder="ex: João Silva"
+          maxlength="20"
+          autocomplete="off"
+        />
+      </div>
+
+      <!-- Seleção de Avatar -->
+      <div class="field-group">
+        <label class="field-label">
+          <span>//</span> Escolha seu avatar
+        </label>
+        <div class="avatar-grid">
+          <!-- Avatar 1 -->
+          <label class="avatar-option">
+            <input type="radio" name="avatar" value="avatar1" checked />
+            <div class="avatar-card">
+              <canvas class="avatar-canvas" id="preview-avatar1" width="48" height="48"></canvas>
+              <div class="avatar-name-tag">Dev</div>
+            </div>
+          </label>
+
+          <!-- Avatar 2 -->
+          <label class="avatar-option">
+            <input type="radio" name="avatar" value="avatar2" />
+            <div class="avatar-card">
+              <canvas class="avatar-canvas" id="preview-avatar2" width="48" height="48"></canvas>
+              <div class="avatar-name-tag">Designer</div>
+            </div>
+          </label>
+
+          <!-- Avatar 3 -->
+          <label class="avatar-option">
+            <input type="radio" name="avatar" value="avatar3" />
+            <div class="avatar-card">
+              <canvas class="avatar-canvas" id="preview-avatar3" width="48" height="48"></canvas>
+              <div class="avatar-name-tag">Manager</div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Botão Entrar -->
+      <button class="btn-enter" id="btn-enter" onclick="enterOffice()">
+        ► Entrar no Escritório
+      </button>
+
+      <!-- Status de conexão -->
+      <div class="status-bar">
+        <div class="status-dot"></div>
+        <span id="connection-status">Conectando ao servidor...</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TELA DO JOGO ===== -->
+  <div id="game-screen">
+    <div id="game-canvas-container"></div>
+
+    <!-- HUD sobre o canvas -->
+    <div id="hud">
+      <!-- Info do jogador -->
+      <div id="player-info">
+        <div class="player-name" id="hud-player-name">---</div>
+        <div class="zone-name" id="hud-zone-name">Recepção</div>
+      </div>
+
+      <!-- Contagem online -->
+      <div id="online-count">
+        <span id="online-num">1</span> online
+      </div>
+
+      <!-- Notificação de zona -->
+      <div id="zone-notification" id="zone-notif">Bem-vindo à Recepção</div>
+
+      <!-- Chat -->
+      <div id="chat-container">
+        <div id="chat-messages">
+          <div class="chat-msg system">💬 Chat da sala atual — só quem está na mesma sala pode ver</div>
+        </div>
+        <div id="chat-input-row">
+          <input type="text" id="chat-input" placeholder="Mensagem..." maxlength="100" />
+          <button id="chat-send">↵</button>
+        </div>
+      </div>
+
+      <!-- Status de áudio -->
+      <div id="audio-status">
+        <span class="audio-icon" id="audio-icon">🔇</span>
+        <div>
+          <div class="audio-label">ÁUDIO</div>
+          <div class="audio-zone" id="audio-zone-label">—</div>
+        </div>
+        <button id="mute-btn">MUDO</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SCRIPTS ===== -->
+  <!-- Socket.io (servido pelo Node.js) -->
+  <script src="/socket.io/socket.io.js"></script>
+  <!-- Phaser.js 3 via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+  <!-- Lógica principal -->
+  <script src="main.js"></script>
+
+</body>
+</html>
