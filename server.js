@@ -34,7 +34,7 @@ io.on('connection', (socket) => {
     players[socket.id].moving = data.moving;
     if (newZone !== oldZone) {
       players[socket.id].zone = newZone;
-      const names = { reception: 'Recepção', open_area: 'Área Aberta', meeting_room: 'Sala de Reunião', private_room: 'Sala Privada' };
+      const names = { reception: 'Recepcao', open_area: 'Area Aberta', meeting_room: 'Sala de Reuniao', private_room: 'Sala Privada' };
       socket.emit('player:zone_changed', { playerId: socket.id, zone: newZone, zoneName: names[newZone] });
       io.emit('player:zone_update', { playerId: socket.id, oldZone, newZone });
     }
